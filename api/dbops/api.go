@@ -154,3 +154,64 @@ func DeleteVideoInfo(vid string) error {
 	defer stmtDel.Close()
 	return nil
 }
+
+// AddNewComments func
+func AddNewComments(vid string, aid int, content string) error {
+	id, err := utils.NewUUID()
+	if err != nil {
+		return err
+	}
+
+	stmtIns, err := dbConn.Prepare(`
+		INSERT INTO comments (id, video_id, author_id, content) values(?, ?, ?, ?)	
+	`)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = stmtIns.Exec(id, vid, aid, content)
+
+	if err != nil {
+		return err
+	}
+	defer stmtIns.Close()
+	return nil
+}
+
+// ListComments func, *加struct是什么意思？？
+// 这里需要合表，user+commens, FROM_UNIXTIME 精确到秒
+func ListComments(vid string, from, to int) ([]*defs.Comment, error) {
+	stmtOut, err := dbConn.Prepare(`
+		SELECT comments.id, users.Login_name, comments.content FROM comments
+		INNER JOIN users ON comments.author_id = users.id 
+		WHERE comments.video_id = ? AND comments.time > FROM_UNIXTIME(?) AND comments.time <= FROM_UNIXTIME(?)
+	`)
+
+	var res []*defs.Comment
+
+	rows, err := stmtOut.Query(vid, from, to)
+	if err != nil {
+		return res, err
+	}
+
+	for rows.Next() {
+		var id, name, content string
+		if err := rows.Scan(&id, &name, &content); err != nil {
+			return res, err
+		}
+
+		c := &defs.Comment{
+			ID:      id,
+			VideoID: vid,
+			Author:  name,
+			Content: content,
+		}
+
+		res = append(res, c)
+	}
+
+	defer stmtOut.Close()
+
+	return res, nil
+}
