@@ -1,4 +1,4 @@
-module go_basic
+module stream_media
 
 go 1.13
 

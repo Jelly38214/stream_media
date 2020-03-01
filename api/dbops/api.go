@@ -2,9 +2,9 @@ package dbops
 
 import (
 	"database/sql"
-	"go_basic/api/defs"
-	"go_basic/api/utils"
 	"log"
+	"stream_media/api/defs"
+	"stream_media/api/utils"
 	"time"
 
 	// Blank import in non-main package
